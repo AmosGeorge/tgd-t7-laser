@@ -136,6 +136,13 @@ public class World extends BasicGameState {
 		context.drawString("Score : "+getScore(), 88, 100);
 		context.drawString("Waves : "+grid.getWaveNumber(), 95, 150);
 		if (player.isDead()){
+			if (grid.isFull()) {
+				context.setColor(Color.white);
+				context.fillRect(0,0,1280,720);
+				context.setColor(Color.black);
+				context.drawString("Score : "+getScore(), 88, 100);
+				context.drawString("Waves : "+grid.getWaveNumber(), 95, 150);
+			}
 			context.setColor(Color.black);
 			context.drawString("Rejouer", 100,400);
 			context.drawString("Quitter", 100,450);

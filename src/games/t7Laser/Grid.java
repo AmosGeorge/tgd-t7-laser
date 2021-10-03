@@ -27,20 +27,20 @@ public class Grid {
 
 	public Grid(World world, int r, int c) {
 		this.world = world;
-		maxRows = 20;
-		maxCols = 20;
+		maxRows = 26;
+		maxCols = 26;
 		rows = r;
 		columns = c;
 		grid = new Cell[maxRows][maxRows];
 		for(int i = 0; i<maxRows; i++)//init row
 			for(int j=0;j<maxCols;j++) //init cologne
-				grid[i][j] = new Cell();
+				grid[i][j] = new Cell(i,j);
 
 		laserList = new LinkedList<Laser>();
 		laserTimer = 1;
 		waveTimer = 200;
 		waveNumber = 0;
-
+		world.setRenderScale((float)720.0/(100*rows));
 		ennemyList = new LinkedList<Ennemy>();
 	}
 
@@ -65,11 +65,11 @@ public class Grid {
 	}
 
 	public void update(GameContainer arg0, StateBasedGame arg1, int arg2) {
-		if(waveNumber % 5 == 2 && waveTimer == 1)
+		if(waveTimer == 1 && (waveNumber % 6 == 2 || rows==maxRows) )
 			addEnnemy();
 
 		laserTimer--;
-		if(laserTimer <= 0){
+		if(laserTimer <= 0 && this.rows != this.maxRows-1){
 			addLaser();
 			laserTimer = Math.max(50-waveNumber*5, 0)+20;
 		}
@@ -84,7 +84,7 @@ public class Grid {
 			//System.out.println(e.getMessage());
 		}
 
-		for(int i = 0; i<this.rows; i++) { //init row
+		for(int i=0;i<this.rows;i++) { //init row
 			for(int j=0;j<this.columns;j++) { //init cologne
 
 					if(grid[i][j].getDeadly() && grid[i][j].getContains())
@@ -93,7 +93,7 @@ public class Grid {
 					if(grid[i][j].getHasBonus() && grid[i][j].getContains()){
 						world.setScore(world.getScore()+77);
 						grid[i][j].setHasBonus(false);
-						grid[i][j].setImageType(Cell.NORMAL_TYPE);
+						grid[i][j].setImageType(this.rows!=this.maxRows?Cell.NORMAL_TYPE:Cell.QRCODE_TYPE);
 						world.getCat().playAsSoundEffect(1, .3f, false);
 					}
 			}
@@ -103,23 +103,29 @@ public class Grid {
 		if(waveTimer == 0){
 			if(rows+1 < maxRows)
 				rows++;
-			if(columns+1 < maxCols)
+			if(columns+1 < maxCols) {
 				columns++;
-			waveNumber++;
-			if(rows==maxRows){
-				for(int i=0; i<5; i++){
-					addMine();
+				if (columns == maxCols-1) {
+					for(int i = 0; i<this.rows; i++) { //init row
+						for(int j=0;j<this.columns;j++) {
+							grid[i][j].setImageType(Cell.QRCODE_TYPE);
+						}
+					}
+					addEnnemy();
+					addEnnemy();
+					addEnnemy();
 				}
 			}
-			else{
-				addMine();
+			waveNumber++;
+			if(rows!=maxRows-1){
+				addMine();	
 			}
-			waveTimer = 100;
+			waveTimer = this.rows!=this.maxRows-1?100:20;
 			Random b1 = new Random();
 			Random b2 = new Random();
 			int rowB = b1.nextInt(this.rows);
 			int columnB = b2.nextInt(this.columns);
-			if(grid[rowB][columnB].getImageType()!=Cell.MINE_TYPE)
+			if(grid[rowB][columnB].getImageType()!=Cell.MINE_TYPE && grid[rowB][columnB].getImageType()!=Cell.QRCODE_TYPE)
 					addBonus(rowB,columnB);
 
 			if(rows > 7)
@@ -187,6 +193,10 @@ public class Grid {
 
 	public void removeLaser(Laser l) {
 		laserList.remove(l);
+	}
+	
+	public boolean isFull() {
+		return this.maxRows-1==this.rows;
 	}
 
 	private void addMine() {
